@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifra de Vigenère - CIC0201</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Cores */
+            --bg-main: #000000;
+            --tab-default: #1D1D1D;
+            --tab-active: #2C2C2C;
+            --stroke-color: #2B2B2B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #878787;
+            --text-success: #22C55E;
+            --text-warning: #AFC522;
+            --text-black: #000000;
+            
+            /* Fontes */
+            --font-main: 'Geist', sans-serif;
+            --font-mono: 'Geist Mono', monospace;
+            
+            /* Tamanhos de fonte */
+            --font-tabs: 15px;
+            --font-title: 24px;
+            --font-subtitle: 16px;
+            --font-section-title: 20px;
+            --font-guide: 16px;
+            --font-input: 14px;
+            --font-button: 15px;
+            
+            /* Layout */
+            --modal-width: 845px;
+            --modal-padding-x: 28px;
+            --modal-padding-top: 20px;
+            --modal-padding-bottom: 36px;
+            --button-padding-x: 16px;
+            --button-padding-y: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            font-family: var(--font-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .tabs-container {
+            display: flex;
+            margin-bottom: 40px;
+        }
+
+        .tab {
+            background-color: var(--tab-default);
+            color: var(--text-primary);
+            border: none;
+            padding: 12px 24px;
+            font-family: var(--font-main);
+            font-size: var(--font-tabs);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--tab-active);
+            opacity: 0.8;
+        }
+
+        .main-title {
+            font-size: var(--font-title);
+            font-weight: 400;
+            color: var(--text-primary);
+            text-align: left;
+            margin-bottom: 8px;
+            width: var(--modal-width);
+            max-width: 100%;
+        }
+
+        .subtitle {
+            font-size: var(--font-subtitle);
+            color: var(--text-secondary);
+            text-align: left;
+            margin-bottom: 40px;
+            width: var(--modal-width);
+            max-width: 100%;
+        }
+
+        .modal {
+            width: var(--modal-width);
+            max-width: 100%;
+            border: 1px dashed var(--stroke-color);
+            padding: var(--modal-padding-top) var(--modal-padding-x) var(--modal-padding-bottom);
+        }
+
+        .success-message {
+            font-size: var(--font-guide);
+            color: var(--text-success);
+            margin-bottom: 8px;
+            min-height: 24px;
+        }
+
+        .default-message {
+            color: var(--text-secondary);
+        }
+
+        .warning-message {
+            color: var(--text-warning);
+        }
+
+        .section-title {
+            font-size: var(--font-section-title);
+            color: var(--text-primary);
+            font-weight: 400;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            font-size: var(--font-guide);
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .text-input {
+            width: 100%;
+            background-color: transparent;
+            border: 1px solid var(--stroke-color);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--font-input);
+            padding: 12px 16px;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .text-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--text-primary);
+        }
+
+        .key-input {
+            width: 100%;
+            background-color: transparent;
+            border: 1px solid var(--stroke-color);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--font-input);
+            padding: 12px 16px;
+            height: 48px;
+        }
+
+        .key-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .key-input:focus {
+            outline: none;
+            border-color: var(--text-primary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: var(--button-padding-y) var(--button-padding-x);
+            font-family: var(--font-main);
+            font-size: var(--font-button);
+            border: 1px solid var(--stroke-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--text-primary);
+            color: var(--text-black);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--text-primary);
+            color: var(--text-black);
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-label {
+            font-size: var(--font-guide);
+            color: var(--text-success);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .result-field {
+            width: 100%;
+            background-color: transparent;
+            border: 1px solid var(--stroke-color);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--font-input);
+            padding: 12px 16px;
+            min-height: 80px;
+            resize: vertical;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .result-field:hover {
+            border-color: var(--text-primary);
+        }
+
+        .copy-icon {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .analysis-content {
+            font-family: var(--font-mono);
+            font-size: var(--font-input);
+            color: var(--text-secondary);
+            background-color: transparent;
+            border: 1px solid var(--stroke-color);
+            padding: 16px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+
+        .custom-select {
+            position: relative;
+            width: 200px;
+            margin-bottom: 0;
+        }
+
+        .select-button {
+            background-color: transparent;
+            border: 1px solid var(--stroke-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: var(--font-input);
+            padding: 12px 16px;
+            height: 48px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .select-button:focus {
+            outline: none;
+            border-color: var(--text-primary);
+        }
+
+        .select-arrow {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: var(--text-secondary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+
+        .custom-select.open .select-arrow {
+            transform: rotate(180deg);
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--tab-default);
+            border: 1px solid var(--stroke-color);
+            border-top: none;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px);
+            transition: all 0.15s ease-out;
+        }
+
+        .custom-select.open .select-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .select-option {
+            padding: 12px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-size: var(--font-input);
+        }
+
+        .select-option:hover {
+            background-color: var(--tab-active);
+        }
+
+        .select-option.selected {
+            background-color: var(--tab-active);
+        }
+    </style>
+</head>
+<body>
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab active" onclick="showTab('encrypt')">Cifrar</button>
+        <button class="tab" onclick="showTab('decrypt')">Decifrar</button>
+        <button class="tab" onclick="showTab('attack')">Ataque Criptoanalítico</button>
+    </div>
+
+    <!-- Título Principal -->
+    <h1 class="main-title">Trabalho de Implementação - Cifra de Vigenère</h1>
+    <p class="subtitle">Profa. Priscila Solis &nbsp;&nbsp;&nbsp;&nbsp; Autor: Gabriel Farago</p>
+
+    <!-- Modal Principal -->
+    <div class="modal">
+        <!-- Tab: Cifrar -->
+        <div id="encrypt-tab" class="tab-content active">
+            <div class="success-message default-message" id="encrypt-message">
+                Cifre a mensagem para ver o resultado
+            </div>
+            
+            <h2 class="section-title">Cifrar Mensagem</h2>
+            
+            <div class="input-group">
+                <label class="input-label">Insira o texto</label>
+                <textarea class="text-input" id="encrypt-text" placeholder="Digite o seu texto aqui..."></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Chave de codificação</label>
+                <input type="text" class="key-input" id="encrypt-key" placeholder="Ex.: KEY">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="encryptMessage()">Cifrar Mensagem</button>
+                <button class="btn btn-secondary" onclick="clearEncryptFields()">Limpar Campos</button>
+            </div>
+            
+            <div class="result-section" id="encrypt-result">
+                <label class="result-label">Resultado da cifra</label>
+                <div style="position: relative;">
+                    <textarea class="result-field" id="encrypt-output" readonly onclick="copyToClipboard('encrypt-output')"></textarea>
+                    <span class="copy-icon" onclick="copyToClipboard('encrypt-output')">📋</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Decifrar -->
+        <div id="decrypt-tab" class="tab-content">
+            <div class="success-message default-message" id="decrypt-message">
+                Decifre a mensagem para ver o resultado
+            </div>
+            
+            <h2 class="section-title">Decifrar Mensagem</h2>
+            
+            <div class="input-group">
+                <label class="input-label">Insira o texto cifrado</label>
+                <textarea class="text-input" id="decrypt-text" placeholder="Digite o texto cifrado aqui..."></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Chave de decodificação</label>
+                <input type="text" class="key-input" id="decrypt-key" placeholder="Ex.: KEY">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="decryptMessage()">Decifrar Mensagem</button>
+                <button class="btn btn-secondary" onclick="clearDecryptFields()">Limpar Campos</button>
+            </div>
+            
+            <div class="result-section" id="decrypt-result">
+                <label class="result-label">Resultado da decifra</label>
+                <div style="position: relative;">
+                    <textarea class="result-field" id="decrypt-output" readonly onclick="copyToClipboard('decrypt-output')"></textarea>
+                    <span class="copy-icon" onclick="copyToClipboard('decrypt-output')">📋</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Ataque -->
+        <div id="attack-tab" class="tab-content">
+            <div class="success-message default-message" id="attack-message">
+                Execute o ataque para ver o resultado
+            </div>
+            
+            <h2 class="section-title">Ataque Criptoanalítico</h2>
+            
+            <div class="input-group">
+                <label class="input-label">Mensagem cifrada para análise</label>
+                <textarea class="text-input" id="attack-text" placeholder="Digite a mensagem cifrada para quebrar..."></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Idioma do texto original</label>
+                <div class="custom-select" id="attack-language-select">
+                    <button type="button" class="select-button" onclick="toggleSelect('attack-language-select')">
+                        <span id="selected-language">Português</span>
+                        <svg class="select-arrow" viewBox="0 0 24 24">
+                            <polyline points="6,9 12,15 18,9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="select-dropdown">
+                        <div class="select-option selected" data-value="pt" onclick="selectOption('attack-language-select', 'pt', 'Português')">Português</div>
+                        <div class="select-option" data-value="en" onclick="selectOption('attack-language-select', 'en', 'Inglês')">Inglês</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="attackCipher()">Executar Ataque</button>
+                <button class="btn btn-secondary" onclick="clearAttackFields()">Limpar Campos</button>
+            </div>
+            
+            <div class="result-section" id="attack-result">
+                <label class="result-label">Análise criptoanalítica</label>
+                <div class="analysis-content" id="attack-analysis"></div>
+                
+                <label class="result-label" style="margin-top: 16px;">Texto decifrado</label>
+                <div style="position: relative;">
+                    <textarea class="result-field" id="attack-output" readonly onclick="copyToClipboard('attack-output')"></textarea>
+                    <span class="copy-icon" onclick="copyToClipboard('attack-output')">📋</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Implementação da Cifra de Vigenère em JavaScript
+        class VigenereCipher {
+            constructor() {
+                // Frequências das letras em português
+                this.freqPt = {
+                    'A': 14.63, 'B': 1.04, 'C': 3.88, 'D': 4.99, 'E': 12.57,
+                    'F': 1.02, 'G': 1.30, 'H': 1.28, 'I': 6.18, 'J': 0.40,
+                    'K': 0.02, 'L': 2.78, 'M': 4.74, 'N': 5.05, 'O': 10.73,
+                    'P': 2.52, 'Q': 1.20, 'R': 6.53, 'S': 7.81, 'T': 4.34,
+                    'U': 4.63, 'V': 1.67, 'W': 0.01, 'X': 0.21, 'Y': 0.01,
+                    'Z': 0.47
+                };
+                
+                // Frequências das letras em inglês
+                this.freqEn = {
+                    'A': 8.12, 'B': 1.49, 'C': 2.78, 'D': 4.25, 'E': 12.02,
+                    'F': 2.23, 'G': 2.02, 'H': 6.09, 'I': 6.97, 'J': 0.15,
+                    'K': 0.77, 'L': 4.03, 'M': 2.41, 'N': 6.75, 'O': 7.51,
+                    'P': 1.93, 'Q': 0.10, 'R': 5.99, 'S': 6.33, 'T': 9.06,
+                    'U': 2.76, 'V': 0.98, 'W': 2.36, 'X': 0.15, 'Y': 1.97,
+                    'Z': 0.07
+                };
+            }
+
+            prepareText(text) {
+                return text.replace(/[^A-Za-z]/g, '').toUpperCase();
+            }
+
+            encrypt(plaintext, key) {
+                plaintext = this.prepareText(plaintext);
+                key = this.prepareText(key);
+                
+                if (!key) throw new Error("Chave não pode estar vazia");
+                
+                let ciphertext = "";
+                let keyIndex = 0;
+                
+                for (let char of plaintext) {
+                    if (char.match(/[A-Z]/)) {
+                        const plainNum = char.charCodeAt(0) - 65;
+                        const keyNum = key[keyIndex % key.length].charCodeAt(0) - 65;
+                        const cipherNum = (plainNum + keyNum) % 26;
+                        ciphertext += String.fromCharCode(cipherNum + 65);
+                        keyIndex++;
+                    }
+                }
+                
+                return ciphertext;
+            }
+
+            decrypt(ciphertext, key) {
+                ciphertext = this.prepareText(ciphertext);
+                key = this.prepareText(key);
+                
+                if (!key) throw new Error("Chave não pode estar vazia");
+                
+                let plaintext = "";
+                let keyIndex = 0;
+                
+                for (let char of ciphertext) {
+                    if (char.match(/[A-Z]/)) {
+                        const cipherNum = char.charCodeAt(0) - 65;
+                        const keyNum = key[keyIndex % key.length].charCodeAt(0) - 65;
+                        const plainNum = (cipherNum - keyNum + 26) % 26;
+                        plaintext += String.fromCharCode(plainNum + 65);
+                        keyIndex++;
+                    }
+                }
+                
+                return plaintext;
+            }
+
+            calculateIC(text) {
+                text = this.prepareText(text);
+                const n = text.length;
+                
+                if (n <= 1) return 0;
+                
+                const freq = {};
+                for (let char of text) {
+                    freq[char] = (freq[char] || 0) + 1;
+                }
+                
+                let ic = 0;
+                for (let f of Object.values(freq)) {
+                    ic += f * (f - 1);
+                }
+                
+                return ic / (n * (n - 1));
+            }
+
+            findKeyLength(ciphertext, maxLength = 20) {
+                ciphertext = this.prepareText(ciphertext);
+                const icScores = {};
+                
+                for (let keyLen = 1; keyLen <= maxLength; keyLen++) {
+                    const groups = Array(keyLen).fill('');
+                    
+                    for (let i = 0; i < ciphertext.length; i++) {
+                        groups[i % keyLen] += ciphertext[i];
+                    }
+                    
+                    const avgIC = groups.reduce((sum, group) => sum + this.calculateIC(group), 0) / keyLen;
+                    icScores[keyLen] = avgIC;
+                }
+                
+                return Object.keys(icScores).reduce((a, b) => icScores[a] > icScores[b] ? a : b);
+            }
+
+            chiSquaredTest(observedFreq, expectedFreq, textLength) {
+                let chiSquared = 0;
+                
+                for (let letter of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+                    const observed = observedFreq[letter] || 0;
+                    const expected = (expectedFreq[letter] || 0) / 100 * textLength;
+                    
+                    if (expected > 0) {
+                        chiSquared += Math.pow(observed - expected, 2) / expected;
+                    }
+                }
+                
+                return chiSquared;
+            }
+
+            findKeyLetter(ciphertextGroup, language = 'pt') {
+                const freqTable = language === 'pt' ? this.freqPt : this.freqEn;
+                let bestKeyChar = 'A';
+                let bestChiSquared = Infinity;
+                
+                for (let shift = 0; shift < 26; shift++) {
+                    let decrypted = "";
+                    for (let char of ciphertextGroup) {
+                        const decryptedChar = String.fromCharCode((char.charCodeAt(0) - 65 - shift + 26) % 26 + 65);
+                        decrypted += decryptedChar;
+                    }
+                    
+                    const observedFreq = {};
+                    for (let char of decrypted) {
+                        observedFreq[char] = (observedFreq[char] || 0) + 1;
+                    }
+                    
+                    const chiSquared = this.chiSquaredTest(observedFreq, freqTable, decrypted.length);
+                    
+                    if (chiSquared < bestChiSquared) {
+                        bestChiSquared = chiSquared;
+                        bestKeyChar = String.fromCharCode(shift + 65);
+                    }
+                }
+                
+                return bestKeyChar;
+            }
+
+            breakCipher(ciphertext, language = 'pt') {
+                ciphertext = this.prepareText(ciphertext);
+                
+                // 1. Encontra o comprimento da chave
+                const keyLength = parseInt(this.findKeyLength(ciphertext));
+                
+                // 2. Divide o texto em grupos
+                const groups = Array(keyLength).fill('');
+                for (let i = 0; i < ciphertext.length; i++) {
+                    groups[i % keyLength] += ciphertext[i];
+                }
+                
+                // 3. Encontra cada letra da chave
+                let key = "";
+                const analysis = [];
+                analysis.push(`Comprimento da chave estimado: ${keyLength}`);
+                analysis.push('');
+                
+                for (let i = 0; i < groups.length; i++) {
+                    const keyLetter = this.findKeyLetter(groups[i], language);
+                    key += keyLetter;
+                    analysis.push(`Posição ${i + 1} da chave: ${keyLetter} (${groups[i].length} caracteres analisados)`);
+                }
+                
+                analysis.push('');
+                analysis.push(`Chave encontrada: ${key}`);
+                analysis.push('');
+                
+                // 4. Decifra o texto
+                const decryptedText = this.decrypt(ciphertext, key);
+                
+                return {
+                    key: key,
+                    decrypted: decryptedText,
+                    analysis: analysis.join('\n')
+                };
+            }
+        }
+
+        // Instância global da cifra
+        const cipher = new VigenereCipher();
+
+        // Funções de navegação entre tabs
+        function showTab(tabName) {
+            // Remove active de todas as tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Adiciona active na tab clicada
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Funções de cifração
+        function encryptMessage() {
+            const text = document.getElementById('encrypt-text').value;
+            const key = document.getElementById('encrypt-key').value;
+            
+            if (!text.trim()) {
+                showMessage('encrypt-message', 'Digite um texto para cifrar', false, true);
+                return;
+            }
+            
+            if (!key.trim()) {
+                showMessage('encrypt-message', 'Digite uma chave para cifrar', false, true);
+                return;
+            }
+            
+            try {
+                const result = cipher.encrypt(text, key);
+                document.getElementById('encrypt-output').value = result;
+                document.getElementById('encrypt-result').classList.add('show');
+                showMessage('encrypt-message', 'Texto cifrado com sucesso!', true);
+            } catch (error) {
+                showMessage('encrypt-message', 'Erro ao cifrar: ' + error.message, false);
+            }
+        }
+
+        function decryptMessage() {
+            const text = document.getElementById('decrypt-text').value;
+            const key = document.getElementById('decrypt-key').value;
+            
+            if (!text.trim()) {
+                showMessage('decrypt-message', 'Digite um texto para decifrar', false, true);
+                return;
+            }
+            
+            if (!key.trim()) {
+                showMessage('decrypt-message', 'Digite uma chave para decifrar', false, true);
+                return;
+            }
+            
+            try {
+                const result = cipher.decrypt(text, key);
+                document.getElementById('decrypt-output').value = result;
+                document.getElementById('decrypt-result').classList.add('show');
+                showMessage('decrypt-message', 'Texto decifrado com sucesso!', true);
+            } catch (error) {
+                showMessage('decrypt-message', 'Erro ao decifrar: ' + error.message, false);
+            }
+        }
+
+        function attackCipher() {
+            const text = document.getElementById('attack-text').value;
+            const language = getSelectedLanguage();
+            
+            if (!text.trim()) {
+                showMessage('attack-message', 'Digite um texto cifrado para analisar', false, true);
+                return;
+            }
+            
+            if (text.trim().length < 50) {
+                showMessage('attack-message', 'Texto muito curto para análise confiável (mínimo 50 caracteres)', false, true);
+                return;
+            }
+            
+            try {
+                showMessage('attack-message', 'Executando análise criptoanalítica...', true);
+                
+                // Simula delay para mostrar o processamento
+                setTimeout(() => {
+                    const result = cipher.breakCipher(text, language);
+                    
+                    document.getElementById('attack-analysis').textContent = result.analysis;
+                    document.getElementById('attack-output').value = result.decrypted;
+                    document.getElementById('attack-result').classList.add('show');
+                    showMessage('attack-message', 'Análise criptoanalítica concluída com sucesso!', true);
+                }, 1000);
+                
+            } catch (error) {
+                showMessage('attack-message', 'Erro na análise: ' + error.message, false);
+            }
+        }
+
+        // Funções de limpeza
+        function clearEncryptFields() {
+            document.getElementById('encrypt-text').value = '';
+            document.getElementById('encrypt-key').value = '';
+            document.getElementById('encrypt-output').value = '';
+            document.getElementById('encrypt-result').classList.remove('show');
+            showMessage('encrypt-message', 'Cifre a mensagem para ver o resultado', false);
+        }
+
+        function clearDecryptFields() {
+            document.getElementById('decrypt-text').value = '';
+            document.getElementById('decrypt-key').value = '';
+            document.getElementById('decrypt-output').value = '';
+            document.getElementById('decrypt-result').classList.remove('show');
+            showMessage('decrypt-message', 'Decifre a mensagem para ver o resultado', false);
+        }
+
+        function clearAttackFields() {
+            document.getElementById('attack-text').value = '';
+            document.getElementById('attack-analysis').textContent = '';
+            document.getElementById('attack-output').value = '';
+            document.getElementById('attack-result').classList.remove('show');
+            showMessage('attack-message', 'Execute o ataque para ver o resultado', false);
+        }
+
+        // Função para mostrar mensagens
+        function showMessage(elementId, message, isSuccess, isWarning = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            if (isSuccess) {
+                element.className = 'success-message';
+            } else if (isWarning) {
+                element.className = 'success-message warning-message';
+            } else {
+                element.className = 'success-message default-message';
+            }
+        }
+
+        // Funções do select customizado
+        let selectedLanguage = 'pt';
+
+        function toggleSelect(selectId) {
+            const selectElement = document.getElementById(selectId);
+            const isOpen = selectElement.classList.contains('open');
+            
+            // Fechar todos os selects
+            document.querySelectorAll('.custom-select').forEach(select => {
+                select.classList.remove('open');
+            });
+            
+            // Abrir/fechar o select clicado
+            if (!isOpen) {
+                selectElement.classList.add('open');
+            }
+        }
+
+        function selectOption(selectId, value, text) {
+            const selectElement = document.getElementById(selectId);
+            const selectedText = document.getElementById('selected-language');
+            
+            // Atualizar texto selecionado
+            selectedText.textContent = text;
+            selectedLanguage = value;
+            
+            // Remover classe selected de todas as opções
+            selectElement.querySelectorAll('.select-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Adicionar classe selected à opção clicada
+            selectElement.querySelector(`[data-value="${value}"]`).classList.add('selected');
+            
+            // Fechar o dropdown
+            selectElement.classList.remove('open');
+        }
+
+        function getSelectedLanguage() {
+            return selectedLanguage;
+        }
+
+        // Fechar dropdown quando clicar fora
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select').forEach(select => {
+                    select.classList.remove('open');
+                });
+            }
+        });
+
+        // Função para copiar texto
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Feedback visual temporário
+            const originalBorder = element.style.borderColor;
+            element.style.borderColor = '#22C55E';
+            setTimeout(() => {
+                element.style.borderColor = originalBorder;
+            }, 500);
+        }
+    </script>
+</body>
+</html>
