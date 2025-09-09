@@ -1,6 +1,6 @@
-# Cifra de Vigenère - Implementação Completa
+# Cifra de Vigenère
 
-Implementação da **Cifra de Vigenère** com interface web moderna, incluindo funcionalidades de cifração, decifração e ataque criptoanalítico.
+Implementação da Cifra de Vigenère com funcionalidades de cifração, decifração e ataque criptoanalítico.
 
 ## 📋 Características
 
@@ -45,11 +45,6 @@ Implementação da **Cifra de Vigenère** com interface web moderna, incluindo f
 5. Analise os resultados: chave descoberta e texto decifrado
 
 ## 🛠️ Tecnologias
-
-### Frontend
-- **HTML5**: Estrutura semântica
-- **CSS3**: Estilização moderna com CSS Variables
-- **JavaScript ES6+**: Lógica da aplicação
 
 ### Algoritmos Implementados
 - Cifra de Vigenère (cifração/decifração)
